@@ -38,10 +38,16 @@ function formatTimestamp(ts) {
     d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
 }
 
-let idCounter = 1
-
 export default function App() {
-  const [entries, setEntries] = useState([])
+  const [entries, setEntries] = useState(() => {
+    try {
+      const saved = localStorage.getItem('attention_ledger_entries')
+      return saved ? JSON.parse(saved) : []
+    } catch (e) {
+      console.error('Error loading entries from localStorage:', e)
+      return []
+    }
+  })
   const [selectedCat, setSelectedCat] = useState('deep')
   const [running, setRunning] = useState(false)
   const [seconds, setSeconds] = useState(0)
@@ -57,6 +63,10 @@ export default function App() {
     }
     return () => clearInterval(intervalRef.current)
   }, [running])
+
+  useEffect(() => {
+    localStorage.setItem('attention_ledger_entries', JSON.stringify(entries))
+  }, [entries])
 
   const orderedEntries = useMemo(
     () => [...entries].sort((a, b) => a.timestamp - b.timestamp),
@@ -88,7 +98,7 @@ export default function App() {
 
   function postEntry(minutes, categoryId) {
     if (!minutes || minutes <= 0) return
-    const id = idCounter++
+    const id = Date.now()
     setEntries((prev) => [
       ...prev,
       { id, categoryId, minutes, timestamp: Date.now() },
@@ -113,6 +123,37 @@ export default function App() {
 
   function voidEntry(id) {
     setEntries((prev) => prev.filter((e) => e.id !== id))
+  }
+
+  function clearLedger() {
+    if (window.confirm("Are you sure you want to void the entire ledger? This will erase all posted entries permanently.")) {
+      setEntries([])
+    }
+  }
+
+  function exportCSV() {
+    if (entries.length === 0) return
+    const headers = ['Entry No.', 'Date', 'Category', 'Type', 'Duration (min)', 'Duration (Formatted)']
+    const rows = ledgerRows.map((row) => [
+      row.entryNo,
+      new Date(row.timestamp).toLocaleString(),
+      row.cat.label,
+      row.cat.type,
+      row.minutes,
+      formatHM(row.minutes)
+    ])
+    const csvContent = [headers, ...rows]
+      .map(e => e.map(val => `"${String(val).replace(/"/g, '""')}"`).join(","))
+      .join("\n")
+      
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.setAttribute("href", url)
+    link.setAttribute("download", `attention_ledger_statement_${new Date().toISOString().slice(0,10)}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   const maxCategoryMinutes = Math.max(
@@ -250,6 +291,16 @@ export default function App() {
                 ))}
               </tbody>
             </table>
+            {entries.length > 0 && (
+              <div className="ledger-actions">
+                <button className="btn btn-secondary btn-sm" onClick={exportCSV}>
+                  Export CSV Statement
+                </button>
+                <button className="btn btn-ghost btn-sm btn-danger" onClick={clearLedger}>
+                  Void Entire Ledger
+                </button>
+              </div>
+            )}
           </div>
         </section>
 

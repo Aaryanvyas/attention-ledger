@@ -497,3 +497,27 @@ body {
     animation: none;
   }
 }
+
+.ledger-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 16px;
+  border-top: 1px dashed var(--paper-line);
+  padding-top: 12px;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 0.78rem;
+}
+
+.btn-danger {
+  color: var(--debit-rust);
+  border-color: var(--debit-rust);
+}
+
+.btn-danger:hover {
+  background: var(--debit-rust-soft);
+}
+
