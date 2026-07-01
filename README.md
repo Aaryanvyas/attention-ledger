@@ -20,6 +20,9 @@ calendar was an accounting ledger" — executed with real UI craft:
   and account bar widths are all computed with `useMemo` from a single source of
   truth (the `entries` array) — a good talking point for a frontend interview
   about state design.
+- **Local Storage Persistence**: Entries are saved automatically to the browser's local storage and persist across sessions.
+- **CSV Statement Export**: Allows users to export their logged attention entries as a clean CSV spreadsheet report.
+- **Void & Clear Controls**: Supports voiding individual incorrect entries or resetting the entire ledger securely.
 - A distinct visual identity (ledger-book layout, slab serif + monospace type,
   stamped "posted" animation) instead of a generic dashboard template.
 
